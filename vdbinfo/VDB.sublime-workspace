@@ -1,0 +1,635 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"inc",
+				"include <${1:header}>\t  Snippet"
+			],
+			[
+				"w",
+				"worldToIndex\tVec3d worldToIndex(const Vec3d &xyz) const"
+			],
+			[
+				"Co",
+				"Coord\tCoord"
+			],
+			[
+				"getVa",
+				"getValueDepth\tint ValueAccessor3<Tree<RootNode<InternalNode<InternalNode<LeafNode<float, 3>, 4>, 5> > >, true, 0, 1, 2>::getValueDepth(const openvdb::v4_0_2::math::Coord &xyz) const"
+			],
+			[
+				"get",
+				"getTree\topenvdb::v4_0_2::tree::Tree<openvdb::v4_0_2::tree::RootNode<openvdb::v4_0_2::tree::InternalNode<openvdb::v4_0_2::tree::InternalNode<openvdb::v4_0_2::tree::LeafNode<float, 3>, 4>, 5> > > * ValueAccessorBase<Tree<RootNode<InternalNode<InternalNode<LeafNode<float, 3>, 4>, 5> > >, true>::getTree() const"
+			],
+			[
+				"Flo",
+				"FloatGrid\tFloatGrid"
+			],
+			[
+				"Coo",
+				"CoordBBox\tCoordBBox"
+			],
+			[
+				"ev",
+				"evalActiveVoxelBoundingBox\topenvdb::v4_0_2::math::CoordBBox evalActiveVoxelBoundingBox() const"
+			],
+			[
+				"ac",
+				"evalActiveVoxelDim\topenvdb::v4_0_2::math::Coord evalActiveVoxelDim() const"
+			],
+			[
+				"Tree",
+				"TreeBase\tTreeBase"
+			],
+			[
+				"c",
+				"c_str\tconst value_type * c_str() const"
+			],
+			[
+				"met",
+				"metaItr"
+			],
+			[
+				"be",
+				"beginMeta\tConstMetaIterator MetaMap::beginMeta() const"
+			],
+			[
+				"Me",
+				"MetaIterator\tMetaIterator"
+			],
+			[
+				"Sha",
+				"SharedPtr\tSharedPtr<typename T>"
+			],
+			[
+				"pre",
+				"preRotate\tMapBase::Ptr preRotate(double radians, openvdb::v4_0_2::math::Axis axis) const"
+			],
+			[
+				"Tra",
+				"TranslationMap\tTranslationMap"
+			],
+			[
+				"Grid",
+				"GridBase\tGridBase"
+			],
+			[
+				"strin",
+				"string\tstring"
+			],
+			[
+				"open",
+				"openvdb\topenvdb::"
+			],
+			[
+				"rea",
+				"readGid\tvoid readGid()"
+			],
+			[
+				"re",
+				"readGrid\tGridBase::Ptr readGrid(const Name &)"
+			],
+			[
+				"nam",
+				"nameItr"
+			],
+			[
+				"Gr",
+				"GridBase\tGridBase"
+			],
+			[
+				"op",
+				"open\tbool open()"
+			],
+			[
+				"fpr",
+				"fptr"
+			],
+			[
+				"ma",
+				"3dsMax-OSL-Shaders"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "vdbinfo.cpp",
+			"settings":
+			{
+				"buffer_size": 4738,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "compile_commands.json",
+			"settings":
+			{
+				"buffer_size": 467,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/jermainedupris/repos/openvdb/openvdb/Grid.h",
+			"settings":
+			{
+				"buffer_size": 53588,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/jermainedupris/Downloads/buildbot-osx/include/openvdb/tree/RootNode.h",
+			"settings":
+			{
+				"buffer_size": 134895,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "BuildIt",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"BuildIt",
+					""
+				],
+				[
+					"BuildIt",
+					"BuildIt"
+				]
+			],
+			[
+				"BuildIt",
+				""
+			]
+		],
+		[
+			[
+				[
+					"BuildIt",
+					""
+				],
+				[
+					"BuildIt",
+					"Runner"
+				]
+			],
+			[
+				"BuildIt",
+				""
+			]
+		],
+		[
+			[
+				[
+					"C++ Single File",
+					""
+				],
+				[
+					"C++ Single File",
+					"Run"
+				]
+			],
+			[
+				"C++ Single File",
+				"Run"
+			]
+		],
+		[
+			[
+				[
+					"C++ Single File",
+					""
+				],
+				[
+					"C++ Single File",
+					"Runner"
+				]
+			],
+			[
+				"C++ Single File",
+				"Runner"
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/C++/C++ Single File.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"lsp",
+				"LSP: Show Diagnostics"
+			],
+			[
+				"resta",
+				"LSP: Restart Servers"
+			],
+			[
+				"rest",
+				"LSP: Restart Servers"
+			],
+			[
+				"LS",
+				"LSP: Show Diagnostics"
+			],
+			[
+				"ls",
+				"LSP: Restart Servers"
+			],
+			[
+				"LSP",
+				"LSP: Restart Servers"
+			],
+			[
+				"ecc",
+				"EasyClangComplete: Show all errors"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 363.0,
+		"history":
+		[
+			"sublime.packages_path()",
+			"sublime.get_package_name()",
+			"dir(sublime)",
+			"from sublime import sublime_lib",
+			"from sublime import _sublime_lib",
+			"import sublime_lib",
+			"import _sublime_lib",
+			"sublime.sublime_lib",
+			"sublime._sublime_lib",
+			"sublime.lib",
+			"sublime.path",
+			"import sublime",
+			"clear()"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+	],
+	"file_history":
+	[
+		"/Users/jermainedupris/repos/editorplugs/sublime/OSL-Sublime/new_shader.py",
+		"/Users/jermainedupris/Downloads/buildbot-osx/include/openvdb/io/File.h",
+		"/Users/jermainedupris/Desktop/vancouver/VDB/.clang_complete",
+		"/Users/jermainedupris/Desktop/vancouver/VDB/VDB.sublime-project",
+		"/Users/jermainedupris/Downloads/buildbot-osx/include/openvdb/Grid.h",
+		"/Users/jermainedupris/Downloads/buildbot-osx/include/openvdb/Types.h",
+		"/Users/jermainedupris/Downloads/buildbot-osx/include/openvdb/math/Maps.h",
+		"/Users/jermainedupris/Downloads/buildbot-osx/include/openvdb/openvdb.h",
+		"/Users/jermainedupris/Library/Application Support/Sublime Text 3/JUNK/test.osl",
+		"/Users/jermainedupris/Library/Application Support/Sublime Text 3/JUNK/Test.cpp",
+		"/Users/jermainedupris/Library/Application Support/Sublime Text 3/Packages/User/JUNK/Test.cpp"
+	],
+	"find":
+	{
+		"height": 24.0
+	},
+	"find_in_files":
+	{
+		"height": 101.0,
+		"where_history":
+		[
+			"/Users/jermainedupris/Downloads/buildbot-osx/include/openvdb"
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"#v.set_syntax_file(SYNTAX_DEF)",
+			"v.set_syntax_file(SYNTAX_DEF)",
+			"packages_path",
+			"sublime_lib",
+			"MetaData",
+			"SharedPtr"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"v.set_syntax_file(SYNTAX_DEF)",
+			"#v.set_syntax_file(SYNTAX_DEF)"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "vdbinfo.cpp",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4738,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								714,
+								714
+							]
+						],
+						"settings":
+						{
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".>:",
+									"selector": "source.c++ - string - comment - constant.numeric"
+								},
+								{
+									"characters": ".>:",
+									"selector": "source.c - string - comment - constant.numeric"
+								},
+								{
+									"characters": ".>: ",
+									"selector": "source.objc++ - string - comment - constant.numeric"
+								},
+								{
+									"characters": ".>: ",
+									"selector": "source.objc - string - comment - constant.numeric"
+								},
+								{
+									"characters": ".>: ",
+									"selector": "source.cuda-c++ - string - comment - constant.numeric"
+								},
+								{
+									"characters": ".>:",
+									"selector": "source.c"
+								},
+								{
+									"characters": ".>:",
+									"selector": "source.c++"
+								},
+								{
+									"characters": ".>:",
+									"selector": "source.objc"
+								},
+								{
+									"characters": ".>:",
+									"selector": "source.objc++"
+								}
+							],
+							"auto_name": "",
+							"lsp_language":
+							{
+								"clangd": "objc++"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "compile_commands.json",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 467,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								467,
+								467
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "/Users/jermainedupris/repos/openvdb/openvdb/Grid.h",
+					"semi_transient": true,
+					"settings":
+					{
+						"buffer_size": 53588,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								21147,
+								21155
+							]
+						],
+						"settings":
+						{
+							"lsp_language":
+							{
+								"clangd": "objc++"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 7015.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/Users/jermainedupris/Downloads/buildbot-osx/include/openvdb/tree/RootNode.h",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 134895,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3068,
+								3068
+							]
+						],
+						"settings":
+						{
+							"lsp_language":
+							{
+								"clangd": "objc++"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 781.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 24.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.diagnostics":
+	{
+		"height": 397.0
+	},
+	"output.exec":
+	{
+		"height": 171.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.mdpopups":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "BuildIt",
+	"project": "VDB.sublime-project",
+	"replace":
+	{
+		"height": 44.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

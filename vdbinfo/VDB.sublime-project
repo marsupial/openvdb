@@ -1,0 +1,82 @@
+{
+	"build_systems":
+	[
+		{
+			"name": "BuildIt",
+			"selector": "source.c++",
+			"shell_cmd": "clang++ -Wno-deprecated-register -std=c++11 -DOPENVDB_3_ABI_COMPATIBLE -lopenvdb -lHalf -ltbb -isysroot/Users/jermainedupris/Applications/Xcode7.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -L/Users/jermainedupris/Downloads/buildbot-osx/lib -I/Users/jermainedupris/Downloads/buildbot-osx/include \"${file}\" -o \"${file_path}/${file_base_name}\" && \"${file_path}/${file_base_name}\"",
+			"variants":
+			[
+				{
+					"name": "Runner",
+					"shell": true,
+					"shell_cmd": "DYLD_FALLBACK_LIBRARY_PATH=/Users/jermainedupris/Downloads/buildbot-osx/lib ./${file_base_name} sphere.vdb"
+				}
+			]
+		}
+	],
+	"cmake":
+	{
+		"schemes":
+		[
+			{
+				"build_folder": "${project_path}/build",
+				"name": "Debug"
+			}
+		]
+	},
+	"folders":
+	[
+		{
+			"path": "."
+		},
+		{
+			"path": "/Users/jermainedupris/repos/openvdb"
+		}
+	],
+	"settings":
+	{
+		"LSP":
+		{
+      "clangd":
+      {
+        "enabled": true,
+        "languageId": "c++",
+        "command": [
+          "/Users/jermainedupris/repos/build/llvm7/bin/clangd",
+          "-header-insertion-decorators=0",
+          "-index",
+          "-compile-commands-dir=/Users/jermainedupris/Desktop/vancouver/VDB",
+          "-log=verbose",
+//          "-Wno-deprecated-register",
+//          "-std=c++11",
+//          "-DOPENVDB_3_ABI_COMPATIBLE",
+//          "-I/Users/jermainedupris/Downloads/buildbot-osx/include",
+//          "-isysroot/Users/jermainedupris/Applications/Xcode7.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk",
+        ],
+      },
+		},
+		"easy_clang_complete_verbose": true,
+		"ecc_flags_sources":
+		[
+			{
+				"file": ".clang_complete"
+			},
+			{
+				"file": "CMakeLists.txt",
+				"flags":
+				[
+					"-DCMAKE_BUILD_TYPE=Release",
+					"-D XXXX=ON"
+				],
+				"prefix_paths":
+				[
+					"/opt/ros/indigo",
+					"~/Code/catkin_ws/devel",
+					"$project_base_path/catkin_ws/devel"
+				]
+			}
+		],
+		"ecc_use_libclang": true
+	}
+}

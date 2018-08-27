@@ -1,0 +1,6 @@
+-std=c++11
+-Wno-deprecated-register
+-DOPENVDB_3_ABI_COMPATIBLE=1
+-I/Users/jermainedupris/Downloads/buildbot-osx/include
+-isysroot/Users/jermainedupris/Applications/Xcode7.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk
+
