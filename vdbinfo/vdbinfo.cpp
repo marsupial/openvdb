@@ -28,6 +28,7 @@ struct Tracer {
 	}
 	~Tracer() {
 		printf("%s<< %s\n", std::string(mLevel, ' ').c_str(), mStr.c_str());
+		--sTraceLevel;
 	}
 };
 
@@ -87,6 +88,7 @@ public:
 		SHOW("activevox", grid->activeVoxelCount());
 		SHOW("activedim", grid->evalActiveVoxelDim());
 		SHOW("activebox", grid->evalActiveVoxelBoundingBox());
+		SHOW("voxelsize", grid->voxelSize());
 #if 1
 		openvdb::FloatGrid::Ptr fGrid = openvdb::gridPtrCast<openvdb::FloatGrid>(grid);
 
@@ -104,22 +106,66 @@ public:
 		GridType::ValueType v1 = openvdb::tools::BoxSampler::sample(accessor, ijk);
 		GridType::ValueType v2 = openvdb::tools::QuadraticSampler::sample(accessor, ijk);
 
-		size_t counts[RootType::LEVEL+1] = { 0,0,0 };
+		size_t counts[RootType::LEVEL+1] = { 0,0,0,0 };
+		size_t iterations = 0;
+		size_t tVoxels = 0;
 		for (auto iter = fGrid->tree().beginNode(); iter; ++iter) {
 			//TRACE("depth %u", iter.getDepth());
 		    if (0)
 		    switch (iter.getDepth()) {
-		    case 0: { RootType* node = nullptr; iter.getNode(node); TRACE("%p", node); }
-		    case 1: { Int1Type* node = nullptr; iter.getNode(node); TRACE("%p", node); }
-		    case 2: { Int2Type* node = nullptr; iter.getNode(node); TRACE("%p", node); }
-		    case 3: { LeafType* node = nullptr; iter.getNode(node); TRACE("%p", node); }
+		    case 0: { RootType* node = nullptr; iter.getNode(node); TRACE("%p", node); break; }
+		    case 1: { Int1Type* node = nullptr; iter.getNode(node); TRACE("%p", node); break; }
+		    case 2: { Int2Type* node = nullptr; iter.getNode(node); TRACE("%p", node); break; }
+		    case 3: { LeafType* node = nullptr; iter.getNode(node); TRACE("%p", node); break; }
 		    }
 		    ++counts[iter.getDepth()];
-		}
+		    ++iterations;
+		    if (iter.getDepth() == 3) {
+			SHOW("     depth", iter.getDepth());
+			SHOW("     coord", iter.getCoord());
+			//SHOW("      bbox", iter.getBoundingBox());
+			openvdb::CoordBBox bbox;
+			SHOW("      size", iter.getBoundingBox().dim());
+			LeafType* node;
+			iter.getNode(node);
+			assert(node);
+			size_t voxels = 0;
+			for (auto vIter = node->cbeginValueOn(); vIter; ++vIter) {
+				SHOW("       pos", vIter.pos());
+				SHOW("    offset", node->coordToOffset(vIter.getCoord()));
+				SHOW("     coord", vIter.getCoord());
+				SHOW("     value", vIter.getValue());
+				assert(vIter.pos() == node->coordToOffset(vIter.getCoord()));
+				++voxels;
+			}
+			TRACE("voxels  %lu", voxels);
+			tVoxels += voxels;
+			}
+			
+			static_assert(decltype(iter)::LEAF_DEPTH == 3, "BAD LEAF DEPTH");
 
+		}
+		TRACE("iterations  %lu", iterations);
+		TRACE("tVoxels  %lu", tVoxels);
 		for (unsigned i = 0; i <= RootType::LEVEL; ++i)
 			TRACE("depth %u %lu", i, counts[i]);
-		TRACE("total  %lu", counts[0] + counts[1] + counts[2]);
+		TRACE("total  %lu", counts[0] + counts[1] + counts[2] + counts[3]);
+
+		iterations = 0;
+		::memset(counts, 0, sizeof(counts));
+		for (auto iter = fGrid->cbeginValueOn(); iter; ++iter) {
+			SHOW("     depth", iter.getDepth());
+			SHOW("leaf depth", iter.getLeafDepth());
+			SHOW("     coord", iter.getCoord());
+			assert(iter.getLeafDepth() == 3);
+			++iterations;
+		    ++counts[iter.getDepth()];
+		}
+		TRACE("iterations  %lu", iterations);
+		for (unsigned i = 0; i <= RootType::LEVEL; ++i)
+			TRACE("depth %u %lu", i, counts[i]);
+		TRACE("total  %lu", counts[0] + counts[1] + counts[2] + counts[3]);
+
 
 		{
 		openvdb::FloatGrid::Accessor acc(fGrid->getAccessor());
@@ -148,9 +194,12 @@ try {
 
 	TRACEOBJ("VDBINFO");
 	VDBParser vdbs;
-	for (int i = 1; i < argc; ++i) {
-		vdbs.parse(argv[i]);
-	}
+	if (argc > 1) {
+		for (int i = 1; i < argc; ++i) {
+			vdbs.parse(argv[i]);
+		}
+	} else
+		vdbs.parse("sphere.vdb");
 } catch (std::exception& e) {
 	TRACE("ERROR: %s", e.what());
 }
