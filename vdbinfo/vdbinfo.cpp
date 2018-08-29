@@ -4,6 +4,10 @@
 #include <string>
 #include <stdio.h>
 
+//
+//
+//
+
 static unsigned sTraceLevel;
 struct Tracer {
 	unsigned mLevel;
@@ -100,11 +104,42 @@ public:
 		using Int2Type = Int1Type::ChildNodeType;  // level 1 InternalNode
 		using LeafType = TreeType::LeafNodeType;   // level 0 LeafNode
 
+		SHOW("leafCount", fGrid->tree().leafCount());
+		SHOW("activeLeafVoxelCount", fGrid->tree().activeLeafVoxelCount());
+		SHOW("leafDimensons", fGrid->tree().cbeginLeaf()->getNodeBoundingBox().dim());
+        SHOW("LeafType::DIM", LeafType::DIM);
+        SHOW("LeafType::NUM_VOXELS", LeafType::NUM_VOXELS);
+		size_t leafIter = 0, onVoxels = 0, offVoxels = 0;
+		for (auto cLeafItr = fGrid->tree().cbeginLeaf(); cLeafItr; ++cLeafItr) {
+			++leafIter;
+			onVoxels += cLeafItr->onVoxelCount();
+			offVoxels += cLeafItr->offVoxelCount();
+		}
+        size_t totalPerLeaf = (onVoxels + offVoxels) / leafIter;
+		SHOW("leafIter", leafIter);
+		SHOW("onVoxels", onVoxels);
+		SHOW("offVoxels", offVoxels);
+		SHOW("totalVoxels", onVoxels + offVoxels);
+		SHOW("totalPerLeaf", totalPerLeaf);
+
+		SHOW("cube total", pow(onVoxels + offVoxels, 1.0/3.0));
+		SHOW("cube / leaf total", pow((onVoxels + offVoxels) / fGrid->tree().leafCount(), 1.0/3.0));
+
+        for (auto cLeafItr = fGrid->tree().cbeginLeaf(); cLeafItr; ++cLeafItr) {
+            assert(totalPerLeaf == cLeafItr->onVoxelCount() + cLeafItr->offVoxelCount());
+            assert(totalPerLeaf == cLeafItr->SIZE);
+        }
+        
+return true;
+
 		const openvdb::Vec3R ijk(0, 0, 0);
 		GridType::ConstAccessor accessor = fGrid->getConstAccessor();
 		GridType::ValueType v0 = openvdb::tools::PointSampler::sample(accessor, ijk);
 		GridType::ValueType v1 = openvdb::tools::BoxSampler::sample(accessor, ijk);
 		GridType::ValueType v2 = openvdb::tools::QuadraticSampler::sample(accessor, ijk);
+
+		for (auto iter = fGrid->tree().beginNode(); iter; ++iter) {
+		}
 
 		size_t counts[RootType::LEVEL+1] = { 0,0,0,0 };
 		size_t iterations = 0;
