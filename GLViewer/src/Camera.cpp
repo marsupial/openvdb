@@ -86,7 +86,7 @@ Camera::resolution( const Vector2i &resolution, bool fitHoriz )
 static float_t
 invFL( float_t mFov )
 {
-	return math::tan( math::degreesToRadians( mFov * 0.5f ) );
+	return math::tan( math::degreesToRadians(mFov) * 0.5f );
 }
 
 float_t
@@ -138,6 +138,7 @@ Matrix4 Camera::buildProjectionMatrix(float fov, float ratio, float near, float 
 {
 	if ( mPerspective )
     {
+#if 0
       const float f = 1.0f / invFL(fov);
       const float rangeInv = ( 1.0f / ( near - far ) );
       return Matrix4(
@@ -146,9 +147,20 @@ Matrix4 Camera::buildProjectionMatrix(float fov, float ratio, float near, float 
         0, 0, (near + far)*rangeInv, -1,
         0, 0, ((near*far)*rangeInv) * 2.f, 0
       );
+#else
+      const float tanHalfFovy = invFL(fov);
+      const float rangeInv = ( 1.0f / ( far - near ) );
+      return Matrix4(
+        1.0 / (ratio*tanHalfFovy), 0, 0, 0,
+        0, 1.0 / tanHalfFovy, 0, 0,
+        0, 0, -(far+near)*rangeInv, -1,
+        0, 0, -(2.0 * far * near) * rangeInv, 0
+      );
+#endif
   	}
     return Matrix4::ortho(mScreenWindow.min.x, mScreenWindow.max.x, mScreenWindow.min.y, mScreenWindow.max.y, near, far);
 }
+// ) * ( (near + far / ( near - far ) )
 
 Matrix4 Camera::projectionMatrix(float near, float far) const
 {

@@ -18,6 +18,7 @@ class Viewport
 protected:
     koala::Camera mCamera;
 	koala::CameraController mCameraController;
+    const char* mFilePath = nullptr;
 	bool mMask;
 
     void grid(float size = 5.f) const;
@@ -35,7 +36,9 @@ public:
         kAltKeyModifier = 256,
 	};
 
-    Viewport() : mCamera(koala::Vector3(5, 5, 5), 35.f), mCameraController(&mCamera), mMask(true) {}
+    Viewport(const char* filepath = nullptr) :
+        mCamera(koala::Vector3(5, 5, 5), 35.f), mCameraController(&mCamera),
+        mFilePath(filepath), mMask(true) {}
 	void init(int width, int height);
 	void resize(int width, int height);
 	void render();

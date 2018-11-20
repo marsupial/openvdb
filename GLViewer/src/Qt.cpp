@@ -195,7 +195,7 @@ protected:
             mViewport.render();
     }
 public:
-    Stageview() {
+    Stageview(const char* filepath) : mViewport(filepath) {
         QGLFormat format;
         format.setVersion(3, 3);
         format.setProfile(QGLFormat::CoreProfile);
@@ -775,7 +775,7 @@ enum {
 
 static QPointF snapPoint(QPointF P, int snap = sSettings.Snap) {
     auto snapper = [] (float v, int snap) -> float {
-        float frac = modf(v/snap, &v);
+        float frac = modff(v/snap, &v);
         v *= snap;
         return frac > 0.5f ? v + snap : v;
     };
@@ -1446,6 +1446,9 @@ class NodeEditor : public QGraphicsView {
         }
         ~TextEdit();
     };
+
+    virtual QSize sizeHint() const { return QSize(200, 200); }
+
 public:
     NodeEditor(QGraphicsScene& s, QWidget* p = nullptr) : QGraphicsView(&s, p) {
         setInteractive(true);
@@ -2663,7 +2666,7 @@ int main(int argc, const char** argv) {
     mainWindow.setAnimated(true);
 
     QDockWidget* docks[3];
-    Stageview* stage = new Stageview;
+    Stageview* stage = new Stageview(argc > 1 ? argv[1] : nullptr);
 
     docks[0] = new QDockWidget(&mainWindow);
     docks[0]->setWidget(stage);

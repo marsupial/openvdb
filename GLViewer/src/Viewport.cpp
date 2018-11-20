@@ -14,6 +14,9 @@
 #include "CamMask.h"
 #include "../include/Viewport.h"
 
+#include <openvdb/openvdb.h>
+#include <openvdb/math/Maps.h>
+
 using namespace koala;
 
 struct ProgramHandles {
@@ -255,7 +258,114 @@ void Quad::init() {
 static UnitCube sUnitCube;
 static Quad sQuad;
 
+
+class BoxCube : public VBA
+{
+    bool mValid = false;
+public:
+
+    void init(const openvdb::GridBase& grid,
+              const openvdb::math::NonlinearFrustumMap& frust,
+              const openvdb::math::AffineMap& xform) {
+      const auto& box = frust.getBBox();
+      auto min = box.min(), max = box.max();
+
+      if (1) {
+        min = frust.applyMap(min);
+        max = frust.applyMap(max);
+      } else if (1) {
+        min = xform.applyMap(min);
+        max = xform.applyMap(max);
+      }
+
+      GLfloat vertices[] = {
+          float(max[0]), float(max[1]), float(max[2]),
+          float(min[0]), float(max[1]), float(max[2]),
+          float(max[0]), float(max[1]), float(min[2]),
+          float(min[0]), float(max[1]), float(min[2]),
+          float(max[0]), float(min[1]), float(max[2]),
+          float(min[0]), float(min[1]), float(max[2]),
+          float(min[0]), float(min[1]), float(min[2]),
+          float(max[0]), float(min[1]), float(min[2]),
+      };
+
+      // Declares the Elements Array, where the indexs to be drawn are stored
+      GLuint elements [] = {
+#if 1
+          3, 2, 6, 7, 4, 2, 0,
+          3, 1, 6, 5, 4, 1, 0
+#else
+          0, 8,
+#endif
+      };
+
+      create(vertices, sizeof(vertices), 3, elements, 14 * sizeof(GLuint));
+
+
+      GLfloat colors[] = {
+          0, 0, 1.0, 1.f,
+          0, 0, 1.0, 1.f,
+          1.0f, 0, 0, 1.f,
+          1.0f, 0, 0, 1.f,
+          0, 0, 1.0, 1.f,
+          0, 0, 1.0, 1.f,
+          1.0f, 0, 0, 1.f,
+          1.0f, 0, 0, 1.f,
+      };
+      add(colors, sizeof(colors), 3, kAttributes[1].location);
+    
+      mValid = true;
+    }
+
+    bool valid() const { return mValid; }
+    void operator () () { VBA::operator()(GL_TRIANGLE_STRIP, 14, GL_UNSIGNED_INT); }
+};
+
+static BoxCube sVDBBox;
+
+void processGrid(openvdb::GridBase& grid) {
+    using namespace openvdb;
+    using namespace openvdb::math;
+
+    const Transform &transform =  grid.transform();
+    NonlinearFrustumMap::ConstPtr frustMap = transform.constMap<NonlinearFrustumMap>();
+    if (!frustMap)
+        return;
+
+    std::cout << grid.voxelSize() << "\n";
+
+    AffineMap secondMap = frustMap->secondMap();
+    if (frustMap->getDepth() != 1.0) {
+        secondMap.accumPreScale(Vec3d(1, 1, frustMap->getDepth()));
+
+        frustMap = NonlinearFrustumMap::ConstPtr(new NonlinearFrustumMap(frustMap->getBBox(),
+                                                 frustMap->getTaper(), /*depth*/1.0, secondMap.copy()));
+    }
+
+    sVDBBox.init(grid, *frustMap, secondMap);
+}
+
 void Viewport::init(int width, int height) {
+    if (mFilePath) {
+        using namespace openvdb;
+        static struct VDB {
+            VDB() { openvdb::initialize(); }
+            ~VDB() { openvdb::uninitialize(); }
+        } sVDBLib;
+
+        io::File f(mFilePath);
+        if (f.open()) {
+            if (GridPtrVecPtr grids = f.getGrids()) {
+                for (auto&& g : *grids) {
+                    processGrid(*g);
+                    //if (sVDBBox.valid())
+                    //    break;
+                }
+            }
+            f.close();
+        }
+    }
+
 	sUnitCube.init();
 	sQuad.init();
     mCameraController.viewPort(width, height);
@@ -364,10 +474,24 @@ void Viewport::render()
 
     glEnable(GL_DEPTH_TEST);
 
-    UseProgram(Programs.constant, mCameraController);
-    Programs.constant.uniform("color", Vector4(.4,.8,.1,1));
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    sUnitCube();
+    if (!sVDBBox.valid()) {
+    #if 0
+        auto M = koala::Matrix4::kIdentity;
+        M.scale(Vector3(5,5,5));
+        UseProgram(Programs.constant, mCameraController, M);
+    #else
+        UseProgram(Programs.constant, mCameraController);
+    #endif
+        Programs.constant.uniform("color", Vector4(.4,.8,.1,1));
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        sUnitCube();
+    } else {
+        UseProgram(Programs.constant, mCameraController);
+        Programs.constant.uniform("color", Vector4(.4,.8,.1,1));
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        sVDBBox();
+    }
 
     grid();
 
