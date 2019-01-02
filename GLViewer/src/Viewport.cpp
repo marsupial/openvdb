@@ -458,6 +458,277 @@ void Viewport::grid( float size ) const {
     }
 }
 
+
+#if 0
+
+const char kVertexShader[] =
+    "#version 150 core"
+    ""                                                                           "\n"
+    "in vec2 pos;"                                                               "\n"
+    "in vec3 color;"                                                             "\n"
+    "in float sides;"                                                            "\n"
+    ""                                                                           "\n"
+    "out vec3 vColor;"                                                           "\n"
+    "out float vSides;"                                                          "\n"
+    ""                                                                           "\n"
+    "void main() {"                                                              "\n"
+    "    gl_Position = vec4(pos, 0.0, 1.0);"                                     "\n"
+    "    vColor = color;"                                                        "\n"
+    "    vSides = sides;"                                                        "\n"
+    "}"                                                                          "\n";
+
+// Geometry shader
+const char kGeometryShader[] =
+   "#version 150 core"                                                           "\n"
+   ""                                                                            "\n"
+   "layout(points) in;"                                                          "\n"
+   "layout(line_strip, max_vertices = 64) out;"                                  "\n"
+     ""                                                                          "\n"
+   "in vec3 vColor[];"                                                           "\n"
+   "in float vSides[];"                                                          "\n"
+   "out vec3 fColor;"                                                            "\n"
+   ""                                                                            "\n"
+   "const float PI = 3.1415926;"                                                 "\n"
+   ""                                                                            "\n"
+   "void main() {"                                                               "\n"
+   "    fColor = vColor[0];"                                                     "\n"
+   "    // Safe, GLfloats can represent small integers exactly"                  "\n"
+   "    for (int i = 0; i <= vSides[0]; i++) {"                                  "\n"
+   "        // Angle between each side in radians"                               "\n"
+   "        float ang = PI * 2.0 / vSides[0] * i;"                               "\n"
+   ""                                                                            "\n"
+   "        // Offset from center of point (0.3 to accomodate for aspect ratio)" "\n"
+   "        vec4 offset = vec4(cos(ang) * 0.3, -sin(ang) * 0.4, 0.0, 0.0);"      "\n"
+   "        gl_Position = gl_in[0].gl_Position + offset;"                        "\n"
+   ""                                                                            "\n"
+   "        EmitVertex();"                                                       "\n"
+   "    }"                                                                       "\n"
+   ""                                                                            "\n"
+   "    EndPrimitive();"                                                         "\n"
+   "}"                                                                           "\n";
+
+// Fragment shader
+const char kFragmentShader[] =                                                   "\n"
+   "#version 150 core"                                                           "\n"
+   "in vec3 fColor;"                                                             "\n"
+   "out vec4 outColor;"                                                          "\n"
+   "void main() {"                                                               "\n"
+   "    outColor = vec4(fColor, 1.0);"                                           "\n"
+   "}"                                                                           "\n";
+
+class BucketDrawer {
+    // Shader creation helper
+    GLuint createShader(GLenum type, const GLchar* src) {
+        GLuint shader = glCreateShader(type);
+        glShaderSource(shader, 1, &src, nullptr);
+        glCompileShader(shader);
+        return shader;
+    }
+
+    GLuint mProgram;
+public:
+
+    BucketDrawer() {
+        // Compile and activate shaders
+        GLuint vertexShader = createShader(GL_VERTEX_SHADER, kVertexShader);
+        GLuint geometryShader = createShader(GL_GEOMETRY_SHADER, kGeometryShader);
+        GLuint fragmentShader = createShader(GL_FRAGMENT_SHADER, kFragmentShader);
+
+        mProgram = glCreateProgram();
+        glAttachShader(mProgram, vertexShader);
+        glAttachShader(mProgram, geometryShader);
+        glAttachShader(mProgram, fragmentShader);
+        glLinkProgram(mProgram);
+
+        glDeleteShader(fragmentShader);
+        glDeleteShader(geometryShader);
+        glDeleteShader(vertexShader);
+    }
+
+    ~BucketDrawer() {
+        glDeleteProgram(mProgram);
+    }
+
+    void draw() {
+
+        // Create VBO with point coordinates
+        GLuint vbo;
+        glGenBuffers(1, &vbo);
+
+        GLfloat points[] = {
+        //  Coordinates     Color             Sides
+        -0.45f,  0.45f, 1.0f, 0.0f, 0.0f,  4.0f,
+         0.45f,  0.45f, 0.0f, 1.0f, 0.0f,  8.0f,
+         0.45f, -0.45f, 0.0f, 0.0f, 1.0f, 16.0f,
+        -0.45f, -0.45f, 1.0f, 1.0f, 0.0f, 32.0f
+        };
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+
+        // Create VAO
+        GLuint vao;
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+
+        // Specify the layout of the vertex data
+        GLint posAttrib = glGetAttribLocation(mProgram, "pos");
+        glEnableVertexAttribArray(posAttrib);
+        glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
+
+        GLint colAttrib = glGetAttribLocation(mProgram, "color");
+        glEnableVertexAttribArray(colAttrib);
+        glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*) (2 * sizeof(GLfloat)));
+
+        GLint sidesAttrib = glGetAttribLocation(mProgram, "sides");
+        glEnableVertexAttribArray(sidesAttrib);
+        glVertexAttribPointer(sidesAttrib, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*) (5 * sizeof(GLfloat)));
+
+
+        glUseProgram(mProgram);
+        glDrawArrays(GL_POINTS, 0, 4);
+        glUseProgram(0);
+        
+        glDeleteBuffers(1, &vbo);
+        glDeleteVertexArrays(1, &vao);
+    }
+};
+
+#else
+
+
+const char kVertexShader[] =
+    "#version 150 core"
+    ""                                                                                "\n"
+    "uniform vec2 tiles = vec2(16,16);"                                              "\n"
+    ""
+    "void main() {"                                                                   "\n"
+    "    float vid = float(gl_VertexID);"                                             "\n"
+    "    vec2 offset = vec2(0) + 1.0 / tiles;"                                               "\n"
+    "    gl_Position = vec4(2.0 * mod(vid,tiles.x)/tiles.x - 1.0 + offset.x,"   "\n"
+    "                       (1.0 - offset.y) - 2.0 * floor(vid/tiles.x)/tiles.y, 0.0, 1.0)"
+    "                  * vec4(vec2(0.9999), 0, 1);" "\n"
+    "}"                                                                               "\n";
+
+// Geometry shader
+const char kGeometryShader[] =
+   "#version 150 core"                                                           "\n"
+   ""                                                                            "\n"
+   "layout(points) in;"                                                          "\n"
+#if 0
+   "layout(line_strip, max_vertices = 5) out;"                                  "\n"
+   "const int kIndex[5] = int[](0,1,2,3,0);"                                                 "\n"
+#else
+   "layout(triangle_strip, max_vertices = 4) out;"                                  "\n"
+   "const int kIndex[4] = int[](0,1,3,2);"                                                 "\n"
+
+#endif
+   ""
+   "const vec2 kData[4] = vec2[]"                                                 "\n"
+   "("                                                                           "\n"
+   "  vec2(-1.0,  1.0),"                                                     "\n"
+   "  vec2( 1.0,  1.0),"                                                     "\n"
+   "  vec2( 1.0, -1.0),"                                                     "\n"
+   "  vec2(-1.0, -1.0)"                                                      "\n"
+   ");"
+   ""                                                                            "\n"
+   "uniform vec2 tiles = vec2(16,16);"                                          "\n"
+   "out vec2 uv;"                                                            "\n"
+                                                                         "\n"
+   ""                                                                            "\n"
+   "void drawIt(vec2 center, vec2 size) {"                                       "\n"
+   "    for (int i = 0, n = kIndex.length(); i < n; ++i) {"                      "\n"
+   "        vec2 P = kData[kIndex[i]];"                                          "\n"
+   "        gl_Position = vec4(center + size * P, 0, 1);"                        "\n"
+   "        gl_PrimitiveID = gl_PrimitiveIDIn;"                                  "\n"
+   "        uv = 0.5 * P + 0.5;"                                                 "\n"
+   ""                                                                            "\n"
+   "        EmitVertex();"                                                       "\n"
+   "    }"                                                                       "\n"
+   ""                                                                            "\n"
+   "    EndPrimitive();"                                                         "\n"
+   "}"                                                                           "\n"
+   ""
+   "void main() {"                                                               "\n"
+//    "    if (mod(gl_PrimitiveIDIn,3)==0)"
+   "    drawIt(gl_in[0].gl_Position.xy, 1.0/tiles);"                             "\n"
+   "}"                                                                           "\n";
+
+// Fragment shader
+const char kFragmentShader[] =                                                   "\n"
+   "#version 150 core"                                                           "\n"
+   "in vec2 uv;"                                                             "\n"
+   "out vec4 outColor;"                                                          "\n"
+   "void main() {"                                                               "\n"
+   "    outColor = vec4(gl_PrimitiveID/100.0,0.0,0.0, 1.0);"                                      "\n"
+   "    outColor = vec4(uv,0,0.25);"                                      "\n"
+   "}"                                                                           "\n";
+
+class BucketDrawer {
+    // Shader creation helper
+    void check(const char* name, GLuint shader) {
+        GLint  compileSuccess;
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &compileSuccess);
+        if (compileSuccess==GL_FALSE) {
+
+            GLchar compLog[1024];
+            glGetShaderInfoLog(shader, sizeof(compLog), 0, compLog);
+            printf("Can't compile shader %s:\n%s", name, compLog);
+            glDeleteShader(shader);
+            shader = 0;
+        }
+    }
+    GLuint createShader(GLenum type, const GLchar* src) {
+        GLuint shader = glCreateShader(type);
+        glShaderSource(shader, 1, &src, nullptr);
+        glCompileShader(shader);
+        check("?", shader);
+        return shader;
+    }
+
+    GLuint mProgram;
+public:
+
+    BucketDrawer() {
+        // Compile and activate shaders
+        GLuint vertexShader = createShader(GL_VERTEX_SHADER, kVertexShader);
+        GLuint geometryShader = createShader(GL_GEOMETRY_SHADER, kGeometryShader);
+        GLuint fragmentShader = createShader(GL_FRAGMENT_SHADER, kFragmentShader);
+
+        mProgram = glCreateProgram();
+        glAttachShader(mProgram, vertexShader);
+        glAttachShader(mProgram, geometryShader);
+        glAttachShader(mProgram, fragmentShader);
+        glLinkProgram(mProgram);
+
+        glDeleteShader(fragmentShader);
+        glDeleteShader(geometryShader);
+        glDeleteShader(vertexShader);
+    }
+
+    ~BucketDrawer() {
+        glDeleteProgram(mProgram);
+    }
+
+    void draw() {
+
+        // Create VAO
+        GLuint vao;
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+
+        glUseProgram(mProgram);
+        glDrawArrays(GL_POINTS, 0, 16 * 6 - 5);
+        glUseProgram(0);
+        
+        glDeleteVertexArrays(1, &vao);
+    }
+};
+
+
+#endif
+
+
 void Viewport::render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -516,6 +787,11 @@ void Viewport::render()
 	// OUT
     glBindVertexArray(0);
 	glUseProgram(0);
+
+
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    static BucketDrawer sBucketDraw;
+    sBucketDraw.draw();
 }
 
 _NUKEVDB_NAMESPACE
