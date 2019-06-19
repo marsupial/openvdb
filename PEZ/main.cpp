@@ -142,6 +142,7 @@ class ProductSelection : public QWidget {
 
 public:
     ProductSelection(DataModelData   data,
+                     std::string     shot = {},
                      QWidget         *parent = nullptr,
                      Qt::WindowFlags f = Qt::WindowFlags())
         : QWidget(parent, f)
@@ -153,8 +154,14 @@ public:
         mList->setSelectionMode(QAbstractItemView::ExtendedSelection);
         mList->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-        for (auto&& item : mModel->items())
+        int index = -1, idx = 0;
+        for (auto&& item : mModel->items()) {
+            if (item == shot)
+                index = idx;
             mCombo->addItem(QString::fromStdString(std::move(item)));
+            ++idx;
+        }
+        mCombo->setCurrentIndex(index);
 
         connect(mCombo, static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
                 this, [this](const QString &cur) { buildSubList(cur.toStdString()); });
@@ -176,10 +183,100 @@ public:
     }
 };
 
+struct FrameRange {
+    int begin, end;
+    int frame(float perecent) const {
+        return begin + (end-begin) * perecent;
+    }
+};
+
+class Viewport : public QFrame {
+    float      mFrame = 0.f;
+    FrameRange mRange = { 1001, 2001 };
+    int        mTimelineGutter = 15;
+    unsigned   mTimeScrub : 1;
+    unsigned   mKeyScrub  : 1;
+public:
+    Viewport(QWidget         *parent = nullptr,
+             Qt::WindowFlags f = Qt::WindowFlags())
+        : QFrame(parent, f)
+        , mTimeScrub(false) {
+            setMouseTracking(true);
+    }
+    virtual ~Viewport() {
+        printf("~Viewport\n");
+    }
+
+    void paintEvent(QPaintEvent *event) override {
+        QFrame::paintEvent(event);
+        QPainter paint(this);
+
+        const QColor& h = palette().highlight().color();
+        const QColor color(h.red(), h.green(), h.blue(), 160);
+        paint.setBrush(QBrush(color));
+
+        paint.setPen(Qt::NoPen);
+        QRect rect(0, height()-4, mFrame * width(), 4);
+        paint.drawRoundedRect(rect, 2, 2);
+        if (!mTimeScrub)
+            return;
+
+        rect = QRect(std::min(width()-40, std::max(rect.right()-20,0)), rect.top()-15, 40, 15);
+        paint.setBrush(Qt::NoBrush);
+#if 0
+        paint.setPen(color);
+        paint.drawRoundedRect(rect, 2, 2);
+#endif
+        paint.setPen(Qt::white);
+        paint.drawText(rect, Qt::AlignCenter, QString("%1").arg(mRange.frame(mFrame)));
+    }
+    void mousePressEvent(QMouseEvent* event) override {
+        if (mKeyScrub || event->y() > (height() - mTimelineGutter))
+            mTimeScrub = true;
+    }
+    void mouseMoveEvent(QMouseEvent* event) override {
+        if (mTimeScrub) {
+            mFrame = std::max(std::min(float(event->x()) / float(width()), 1.f), 0.f);
+            update();
+        }
+    }
+    void mouseReleaseEvent(QMouseEvent* event) override {
+        if (mTimeScrub) {
+            mTimeScrub = false;
+            update();
+        }
+    }
+
+    void keyPressEvent(QKeyEvent *event) override {
+        if (event->key() == Qt::Key_K) {
+            mKeyScrub = true;
+            event->accept();
+            return;
+        }
+        event->setAccepted(false);
+    }
+    void keyReleaseEvent(QKeyEvent *event) override {
+        if (event->key() == Qt::Key_K) {
+            mKeyScrub = false;
+            return;
+        }
+        event->setAccepted(false);
+    }
+
+    void enterEvent(QEvent * event) override {
+        QFrame::enterEvent(event);
+        setFocus();
+    }
+    void leaveEvent(QEvent * event) override {
+        QFrame::leaveEvent(event);
+        static_cast<QWidget*>(parent())->setFocus();
+    }
+};
+
 class ProductBrowser : public QFrame {
     QSplitter        *mSplitter;
     ProductSelection *mSelection;
-    QWidget          *mViewport;
+    Viewport         *mViewport;
     QTabWidget       *mProductInfo;
     QSplitter        *mBottomSplitter;
     std::map<std::string, int> mTabViews;
@@ -249,11 +346,12 @@ class ProductBrowser : public QFrame {
     }
 public:
     ProductBrowser(DataModelData   data,
+                   std::string     shot = {},
                    QWidget         *parent = nullptr,
                    Qt::WindowFlags f = Qt::WindowFlags())
         : QFrame(parent, f)
-        , mSelection(new ProductSelection(std::move(data), this))
-        , mViewport(new QWidget(this))
+        , mSelection(new ProductSelection(std::move(data), std::move(shot), this))
+        , mViewport(new Viewport(this))
         , mProductInfo(new QTabWidget(this))
     {
         mSelection->setFunction([&](const QItemSelection &selected, const QItemSelection &deselected) {
@@ -289,18 +387,21 @@ public:
 
         mProductInfo->setTabPosition(QTabWidget::South);
         mProductInfo->setStyleSheet("QTabBar::tab { height: 16px; font-size: 8pt; }");
-        mProductInfo->hide();
 
-        mViewport->setStyleSheet("background-color:lightgray;");
         mSelection->layout()->setContentsMargins(0, 0, 0, 0);
+
+        mProductInfo->hide();
+        mViewport->hide();
 
         mSplitter = new QSplitter(Qt::Orientation::Horizontal, this);
         mSplitter->addWidget(mSelection);
         mSplitter->addWidget(mViewport);
+        mSplitter->setSizes(QList<int>() << 200 << 800);
 
         mBottomSplitter = new QSplitter(Qt::Orientation::Vertical, this);
         mBottomSplitter->addWidget(mSplitter);
         mBottomSplitter->addWidget(mProductInfo);
+        mBottomSplitter->setSizes(QList<int>() << 500 << 300);
 
         QVBoxLayout* layout = new QVBoxLayout(this);
         layout->addWidget(mBottomSplitter);
@@ -348,6 +449,9 @@ public:
         paint.drawRect(rect());
     }
 
+    QSize sizeHint() const override {
+        return { 1000, 800 };
+    }
 };
 
 int main(int argc, const char * argv[]) {
