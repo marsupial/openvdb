@@ -8,6 +8,7 @@ CameraController.cpp
 
 #include <limits>
 #include <cmath>
+#include <string.h>
 
 NAMESPACE_KOALA_
 
@@ -269,7 +270,7 @@ struct DollyMotion : public CameraController::MotionState
     void update( const Vector2i &p )
     {
         const float_t  kEpsilon = 0.000001;
-    
+
         const Vector2i viewPort = this->viewPort();
         const Vector2f dv = Vector2f( (p - mMotionStart) ) / viewPort;
         float_t d = dv.x - dv.y;

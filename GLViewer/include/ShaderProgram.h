@@ -7,7 +7,6 @@
 
 #include <string>
 
-NUKEVDB_NAMESPACE_
 
 class ShaderProgram
 {
@@ -15,15 +14,16 @@ class ShaderProgram
 
 	class Source;
 public:
-	struct Attribute
-    {
+	struct Attribute {
     	const char *name;
         unsigned   location;
     };
+    static const Attribute kColorAttributes[];
+    static const Attribute kTexAttributes[];
 
 	ShaderProgram() : mProgram(0) {}
-    void load( const char *fileKey, const Attribute ** = NULL );
-    void load( const char *fileKey, const Attribute *a = NULL ) { return load(fileKey, a ? &a : NULL); }
+    void load(const char *vert, const char *frag, const Attribute * = nullptr );
+    void load(const char *vertFrag, const Attribute *a ) { return load(vertFrag, vertFrag, a); }
     operator unsigned () const { return mProgram; }
 
 	template <class T> static void setUniform( unsigned program, const char *name, const T &value );
@@ -32,6 +32,5 @@ public:
 
 };
 
-_NUKEVDB_NAMESPACE
 
 #endif

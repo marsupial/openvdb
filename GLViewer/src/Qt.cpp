@@ -6,6 +6,7 @@
 #include <QtGui/QMouseEvent>
 
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QDesktopWidget>
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QLayout>
 #include <QtWidgets/QLineEdit>
@@ -38,6 +39,7 @@
 
 #include "math/Vector3.h"
 #include "Viewport.h"
+#include "SceneEditor.h"
 
 Q_GUI_EXPORT void qt_blurImage(QImage &blurImage, qreal radius, bool quality, int transposed = 0);
 
@@ -93,9 +95,10 @@ struct Settings {
         app.setPalette(darkPalette);
 
         app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }"
-                          //"QSplitter::handle { background:darkGray; }"
-                          "QSplitter::handle:horizontal { width:6px; }"
-                          "QSplitter::handle:vertical { height:6px; }"
+                          "QSplitter { spacing: 0px; padding: 0px; margin: 0px; }"
+                          "QSplitter::separator { border: 0px; spacing: 0px; padding: 1px; margin: 0px; }"
+                          "QSplitter::separator:horizontal { width: 5px; }"
+                          "QSplitter::separator:vertical { height: 5px; }"
                           "QMenu { background-color: rgb(53,53,53); }"
                           "QMenu::item:selected { background: rgb(255, 168, 40); }"
                           "QGraphicsView { background-color: rgb(53,53,53); border: 0 }"
@@ -110,6 +113,8 @@ struct Settings {
         Snap = Height();
     }
 };
+
+
 Settings sSettings;
 
 template <class T> class NonEmptyList {
@@ -164,44 +169,69 @@ class Stageview : public QGLWidget {
       }
       return (Viewport::Action) action;
     }
+    Viewport::Event makeEvent(Viewport::Action action, int x, int y) {
+        return {
+            { x, y },
+            { unsigned(width()), unsigned(height()) },
+            action
+        };
+    }
 
+    Viewport::Event makeEvent(unsigned action, QMouseEvent *event) {
+        return makeEvent(translate(action, event), event->x(), event->y());
+    }
+    void interactRefresh() {
+        true ? repaint() : update();
+    }
 protected:
-    virtual void mousePressEvent(QMouseEvent *event) {
-        mViewport.mouse(event->x(), event->y(), translate(Viewport::kMouseDown, event));
-        update();
+    void mousePressEvent(QMouseEvent *event) final {
+        if (mViewport.mouse(makeEvent(Viewport::kMouseDown, event)))
+            interactRefresh();
     }
-    virtual void mouseReleaseEvent(QMouseEvent *event) {
-        mViewport.mouse(event->x(), event->y(), translate(Viewport::kMouseUp, event));
-        update();
+    void mouseReleaseEvent(QMouseEvent *event) final {
+        if (mViewport.mouse(makeEvent(Viewport::kMouseUp, event)))
+            interactRefresh();
     }
-    virtual void mouseMoveEvent(QMouseEvent *event) {
-        mViewport.mouse(event->x(), event->y(), translate(Viewport::kMouseMove, event));
-        update();
+    void mouseMoveEvent(QMouseEvent *event) final {
+        if (mViewport.mouse(makeEvent(Viewport::kMouseMove | (event->buttons() ? Viewport::kMouseDown : 0), event)))
+            interactRefresh();
     }
-    virtual void wheelEvent(QWheelEvent *event) {
+    void wheelEvent(QWheelEvent *event) final {
         auto delta = sSettings.zoomDelta(event->angleDelta());
-        mViewport.mouse(delta.x(), delta.y(), Viewport::kScrollWheel);
-        update();
+        if (mViewport.mouse(makeEvent(Viewport::kScrollWheel, delta.x(), delta.y())))
+            interactRefresh();
+    }
+    void keyPressEvent(QKeyEvent *event) final {
+        if (event->count() == 1 && mViewport.keypress(event->text().toStdString().front())) {
+            event->accept();
+            interactRefresh();
+        } else
+            event->ignore();
     }
 
     virtual void initializeGL() {
-        mViewport.init(width(),height());
+        mViewport.init(width(),height(), qApp->desktop()->devicePixelRatio());
     }
     virtual void resizeGL(int w, int h) {
         mViewport.resize(w, h);
     }
     virtual void paintGL() {
-        if (isValid())
-            mViewport.render();
+        // if (!isValid())
+        //     return;
+        if (mViewport.render())
+            update();
     }
 public:
     Stageview(const char* filepath) : mViewport(filepath) {
         QGLFormat format;
-        format.setVersion(3, 3);
+        format.setVersion(4, 1);
         format.setProfile(QGLFormat::CoreProfile);
         setFormat(format);
+
+        setMouseTracking(true);
     }
     virtual QSize sizeHint() const { return QSize(1280, 720)*0.7f; }
+    SceneEditor* editor() { return mViewport.editor(); }
 };
 
 class LevenshteinDistance {
@@ -1477,9 +1507,10 @@ public:
     }
 
     bool navigationEvent(QMouseEvent *event) {
+        const Qt::KeyboardModifiers mods = event->modifiers();
         if (event->button() == Qt::RightButton)
             mAction.reset(new Zoom(this, event));
-        else if (event->button() == Qt::MidButton)
+        else if (event->button() == Qt::MidButton || (event->button() == Qt::LeftButton && mods & Qt::ControlModifier))
             mAction.reset(new Pan(this, event));
         return mAction.get();
     }
@@ -2565,7 +2596,7 @@ NodeEditor::TextEdit::~TextEdit() {
     }
 }
 
-class Window : public QMainWindow {
+class Window : public QFrame {
     std::unique_ptr<TabMenu> mTabMenu;
     std::map<std::string, std::vector<std::string>> mItems;
 
@@ -2573,7 +2604,7 @@ class Window : public QMainWindow {
     std::list<std::unique_ptr<NodeView>> mNodes;
 
 public:
-    Window(QWidget* parent = nullptr) : QMainWindow(parent) {
+    Window(QWidget* parent = nullptr) : QFrame(parent) {
         mItems["Polygon"].push_back("PolyBevel");
         mItems["Polygon"].push_back("PolyBridge");
         mItems["Polygon"].push_back("PolyCur");
@@ -2593,8 +2624,15 @@ public:
     }
 
     virtual void keyPressEvent(QKeyEvent *event) {
-      if (event->key()!=Qt::Key_Tab)
-          return QMainWindow::keyPressEvent(event);
+      if (event->key() != Qt::Key_Tab) {
+          QWidget* child = QApplication::widgetAt(QCursor::pos());
+          if (!child)
+              return QFrame::keyPressEvent(event);
+          child->setFocus();
+          qApp->postEvent(child, new QKeyEvent(event->type(), event->key(), event->modifiers(), event->nativeScanCode(), event->nativeVirtualKey(), event->nativeModifiers(), event->text(), event->isAutoRepeat(), event->count()));
+          event->setAccepted(false);
+          return;
+      }
       if (!mTabMenu) {
           if (mItems.empty()) return;
           mTabMenu.reset(new TabMenu(mItems, this));
@@ -2632,6 +2670,39 @@ public:
     void removeScene(QGraphicsScene& s) { mNodeScenes.erase(&s); }
 };
 
+class Timeline : public QSlider {
+    SceneEditor* mEditor;
+    QWidget* mStageView;
+public:
+    Timeline(Stageview* stageview = nullptr,
+             QWidget* parent = nullptr)
+        : QSlider(Qt::Orientation::Horizontal, parent)
+        , mStageView(stageview) {
+        setEditor(stageview->editor());
+        setTracking(true);
+        setFocusPolicy(Qt::FocusPolicy::NoFocus);
+    }
+
+    void
+    setEditor(SceneEditor* editor) {
+        mEditor = editor;
+        if (mEditor) {
+            const auto range = mEditor->timeRange();
+            setMinimum(range.first);
+            setMaximum(range.second);
+        }
+    }
+    void
+    sliderChange(SliderChange change) override {
+        QSlider::sliderChange(change);
+        if (change == SliderValueChange && mEditor) {
+            mEditor->setTime(value());
+            mStageView->update();
+        }
+    }
+
+};
+
 int main(int argc, const char** argv) {
     TaggedInteger<uint16_t> ti(std::numeric_limits<uint16_t>::max(), 3);
     printf("hash: %zx %lu %d %d  %d\n", std::hash<NodePiece>()(ti), sizeof(uint16_t), ti.value(), ti.tag(), std::numeric_limits<uint16_t>::max());
@@ -2650,40 +2721,49 @@ int main(int argc, const char** argv) {
     printf("ti.2: %u\n", unsigned(ti[2]));
     printf("ti.255: %u\n", unsigned(ti[15]));
 
+#if 0 //ndef __APPLE__
+    ::setenv("QT_SCALE_FACTOR", "0.5", true);
+    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
+
     QApplication app(argc, (char**)argv, 0);
     sSettings.init(app);
 
-    Window mainWindow;
-
     NodeScene scene;
+    Window    mainWindow;
+
     mainWindow.addScene(scene);
 
     mainWindow.resize(1280, 720);
-    mainWindow.setTabPosition(Qt::TopDockWidgetArea, QTabWidget::North);
-    mainWindow.setTabPosition(Qt::BottomDockWidgetArea, QTabWidget::North);
-    mainWindow.setTabPosition(Qt::LeftDockWidgetArea, QTabWidget::North);
-    mainWindow.setTabPosition(Qt::RightDockWidgetArea, QTabWidget::North);
-    mainWindow.setAnimated(true);
 
-    QDockWidget* docks[3];
-    Stageview* stage = new Stageview(argc > 1 ? argv[1] : nullptr);
+    QFrame* stageView = new QFrame;
+    Stageview* glViewer = new Stageview(argc > 1 ? argv[1] : nullptr);
+    {
+        stageView->setLayout(new QVBoxLayout);
+        stageView->layout()->addWidget(glViewer);
+        stageView->layout()->addWidget(new Timeline(glViewer));
+    }
 
-    docks[0] = new QDockWidget(&mainWindow);
-    docks[0]->setWidget(stage);
-    mainWindow.addDockWidget(Qt::LeftDockWidgetArea, docks[0]);
+    QSplitter *vSplitter = new QSplitter(Qt::Vertical);
+    vSplitter->addWidget(stageView);
+    vSplitter->addWidget(new NodeEditor(scene));
+    vSplitter->setStretchFactor(0, 3);
+    vSplitter->setStretchFactor(1, 1);
 
-    docks[1] = new QDockWidget(&mainWindow);
-    docks[1]->setWidget(new NodeEditor(scene));
-    mainWindow.splitDockWidget(docks[0], docks[1], Qt::Vertical);
+    QSplitter* hSplitter = new QSplitter(Qt::Horizontal);
+    hSplitter->addWidget(vSplitter);
+    hSplitter->addWidget(new QWidget);
+    hSplitter->setStretchFactor(0, 3);
+    hSplitter->setStretchFactor(1, 1);
 
-    docks[2] = new QDockWidget(&mainWindow);
-    docks[2]->setWidget(new QWidget);
-    //mainWindow.splitDockWidget(docks[0], docks[1], Qt::Vertical);
-    mainWindow.addDockWidget(Qt::RightDockWidgetArea, docks[2]);
+    mainWindow.setLayout(new QGridLayout);
+    mainWindow.layout()->addWidget(hSplitter);
 
     mainWindow.show();
-    stage->hide();
-    stage->show();
+    // stage->hide();
+    // stage->show();
+    glViewer->setFocus();
+
     app.exec();
 
     return 0;

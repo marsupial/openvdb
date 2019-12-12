@@ -39,7 +39,7 @@ void CameraController::glSetup() const
     }
     else
         ::glOrtho(screenWindow.min.x, screenWindow.max.x, screenWindow.min.y, screenWindow.max.y, cp[0], cp[1]);
- 
+
 
     glMatrixMode( GL_MODELVIEW );
     glLoadIdentity();
@@ -386,4 +386,3 @@ int main(int argc, char *argv[])
         window.showMaximized();
     return app.exec();
 }
-

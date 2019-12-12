@@ -1,0 +1,119 @@
+#usda 1.0
+(
+    upAxis = "Y"
+)
+
+def Xform "TexModel" (
+    kind = "component"
+)
+{
+    def PointInstancer "Buildings"
+	{
+		rel prototypes = [ <Prototypes/card0>, <Prototypes/card1> ]
+        int[] protoIndices = [0, 1, 0, 0, 0, 1]
+        point3f[] positions = [(0,-5,0), (0,0,0), (0,5,0), (0,10,0), (0,15,0), (0,20,0)]
+		quath[] orientations = [ (0.7071067811865476, 0.7071067811865475, 0, 0),
+		                         (0.7071067811865476, 0, 0.7071067811865475, 0),
+								 (0.7071067811865476, 0, 0, 0.7071067811865475),
+								 (0,0,0,0), (0,0,0,0), (0,0,0,0)]
+        float3[] scales = [ (1,1,1), (1,1,1), (1,1,1), (1,1,1), (1,1,1), (1,1,1) ]
+
+        def Xform "Prototypes"
+        {			
+			def Mesh "card0"
+			{
+			    float3[] extent = [(-5, -2, 0), (5, 2, 0)]
+			    int[] faceVertexCounts = [4]
+			    int[] faceVertexIndices = [0, 1, 2, 3]
+			    point3f[] points = [(-5, -2, 0), (5, -2, 0), (5, 2, 0), (-5, 2, 0)]
+			    texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (interpolation = "varying")
+				#rel material:binding = </TexModel/Materials/boardMat>
+			}
+			def Mesh "card1"
+			{
+			    float3[] extent = [(-5, -2, 0), (5, 2, 0)]
+			    int[] faceVertexCounts = [4]
+			    int[] faceVertexIndices = [0, 1, 2, 3]
+			    point3f[] points = [(-5, -2, 0), (5, -2, 0), (5, 2, 0), (-5, 2, 0)]
+			    texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (interpolation = "varying")
+				#rel material:binding = </TexModel/Materials/boardMatRef>
+			}
+		}
+	}
+	def Scope "Materials" {
+	    def Material "boardMat"
+	    {
+	        token outputs:surface.connect = </TexModel/Materials/boardMat/PBRShader.outputs:surface>
+
+	        def Shader "PBRShader"
+	        {
+	            uniform token info:id = "UsdPreviewSurface"
+	            color3f inputs:diffuseColor.connect = </TexModel/Materials/boardMat/diffuseTexture.outputs:rgb>
+	            float inputs:metallic = 0
+	            float inputs:roughness = 0.4
+	            token outputs:surface
+	        }
+
+	        def Shader "stReader"
+	        {
+	            uniform token info:id = "UsdPrimvarReader_float2"
+	            token inputs:varname = "st"
+	            float2 outputs:result
+	        }
+
+	        def Shader "diffuseTexture"
+	        {
+	            uniform token info:id = "UsdUVTexture"
+	            asset inputs:file = "/Users/jermainedupris/Desktop/Screen Shot 2019-08-07 at 12.45.26 AM.png"
+	            float2 inputs:st.connect = </TexModel/Materials/boardMat/stReader.outputs:result>
+	            float3 outputs:rgb
+	        }
+	    }
+
+	    def Material "boardMatRef" (
+			references = </TexModel/Materials/boardMat>
+		)
+		{
+	        token outputs:surface.connect = </TexModel/Materials/boardMatRef/PBRShader.outputs:surface>
+
+			over "PBRShader"
+			{
+	            color3f inputs:diffuseColor.connect = </TexModel/Materials/boardMatRef/diffuseTexture.outputs:rgb>
+			}
+			over "diffuseTexture"
+			{
+	            asset inputs:file = "/Users/jermainedupris/Desktop/Screen Shot 2019-08-07 at 12.45.26 AM.png"
+			}
+		}
+
+	    def Material "boardMatCopy"
+	    {
+	        token outputs:surface.connect = </TexModel/Materials/boardMatCopy/PBRShader.outputs:surface>
+
+	        def Shader "PBRShader"
+	        {
+	            uniform token info:id = "UsdPreviewSurface"
+	            color3f inputs:diffuseColor.connect = </TexModel/Materials/boardMatCopy/diffuseTexture.outputs:rgb>
+	            float inputs:metallic = 0
+	            float inputs:roughness = 0.4
+	            token outputs:surface
+	        }
+
+	        def Shader "stReader"
+	        {
+	            uniform token info:id = "UsdPrimvarReader_float2"
+	            token inputs:varname = "st"
+	            float2 outputs:result
+	        }
+
+	        def Shader "diffuseTexture"
+	        {
+	            uniform token info:id = "UsdUVTexture"
+	            asset inputs:file = "/Users/jermainedupris/Desktop/Screen Shot 2019-08-07 at 12.45.26 AM.png"
+	            float2 inputs:st.connect = </TexModel/Materials/boardMatCopy/stReader.outputs:result>
+	            float3 outputs:rgb
+	        }
+	    }
+	}
+}
+

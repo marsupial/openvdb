@@ -118,5 +118,10 @@ float lm = 1;
     float fade = fw;
 
     FrameBuffer0 = vec4(Color.rgb, edge * Blend * (1.0 - fade));
+
+    // float depth = 0;
+    // if (false)
+    //     depth = (0.5 * depth + 0.5) * gl_DepthRange.diff + gl_DepthRange.near;
+    // gl_FragDepth = depth;
 }
 

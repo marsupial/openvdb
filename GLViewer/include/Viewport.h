@@ -1,50 +1,67 @@
 /*
 	Viewport.h
 */
-
-#ifndef VDB_Nuke_Viewport_h__
-#define VDB_Nuke_Viewport_h__
+#pragma once
 
 #include "Camera.h"
 #include "CameraController.h"
-#include "CamMask.h"
+#include "Vector2.h"
 
-NUKEVDB_NAMESPACE_
-
-class CamMask;
+class Tool;
+class ViewContext;
+class SceneEditor;
 
 class Viewport
 {
 protected:
-    koala::Camera mCamera;
-	koala::CameraController mCameraController;
-    const char* mFilePath = nullptr;
-	bool mMask;
+    class FrameBuffer;
+    class GLData;
 
-    void grid(float size = 5.f) const;
+    Camera                mCamera;
+	CameraController      mCameraController;
+
+    std::unique_ptr<GLData>      mGLData;
+    std::unique_ptr<Tool>        mCurrentTool, mNavigationTool;
+    std::unique_ptr<SceneEditor> mSceneEditor;
+
+    bool mMask;
+
+    void toolChange();
 
 public:
-	enum Action {
-	    kMouseDown = 1,
-	    kMouseUp = 2,
-	    kMouseMove = 4,
-	    kScrollWheel = 8,
-	    kRMouseModifier = 16,
-	    kMMouseModifier = 32,
+    Viewport(const char* filepath = nullptr);
+    ~Viewport();
+
+	void init(int width, int height, float deviceScale);
+	void resize(int width, int height);
+
+    bool render();
+    void drawBackground();
+    void drawGrid();
+    void drawScene();
+    void drawMask();
+    void drawTools();
+
+    enum Action {
+        kMouseDown = 1,
+        kMouseUp = 2,
+        kMouseMove = 4,
+        kMouseEvents = kMouseDown | kMouseUp | kMouseMove,
+        kScrollWheel = 8,
+        kRMouseModifier = 16,
+        kMMouseModifier = 32,
         kCmdKeyModifier = 64,
         kCtlKeyModifier = 128,
         kAltKeyModifier = 256,
-	};
+    };
+    struct Event {
+        Vector2i mouse;
+        Vector2u window;
+        Action   action;
+    };
 
-    Viewport(const char* filepath = nullptr) :
-        mCamera(koala::Vector3(5, 5, 5), 35.f), mCameraController(&mCamera),
-        mFilePath(filepath), mMask(true) {}
-	void init(int width, int height);
-	void resize(int width, int height);
-	void render();
-	void mouse(int x, int y, Action action);
+    bool mouse(const Event&);
+    bool keypress(char key);
+    bool navigationEvent(const Event& e);
+    SceneEditor* editor() { return mSceneEditor.get(); }
 };
-
-_NUKEVDB_NAMESPACE
-
-#endif

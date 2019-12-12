@@ -1,0 +1,87 @@
+#usda 1.0
+(
+    defaultPrim = "Kitchen_set"
+    upAxis = "Y"
+
+    startTimeCode = 0
+    endTimeCode   = 200
+)
+
+def Xform "Implicits" (
+    add variantSets = "shapeVariant"
+)
+{
+    variantSet "shapeVariant" = {
+        "Sphere" {
+            def Sphere "Ball"
+            {
+				float3[] extent = [(-1, -1, -1), (1,1,1)]
+            }
+        }
+    }
+}
+
+def Cube "frontSphere" {
+	float3[] extent = [(-1, -1, -1), (1,1,1)]
+    double3 xformOp:translate = (10,15,10)
+    float3 xformOp:scale = (1,1,1)
+    float3 xformOp:rotateXYZ = (90,90,90)
+    #uniform token[] xformOpOrder = ["xformOp:translate",  "xformOp:rotateXYZ", "xformOp:scale"]
+
+    matrix4d xformOp:transform = ( (2.5, 0, 0, 0), (0, 2.5, 0, 0), (0, 0, 2.5, 0), (-5, -5, -5, 1) )
+    uniform token[] xformOpOrder = ["xformOp:transform"]
+}
+
+def Sphere "backSphere" {
+	float3[] extent = [(-1, -1, -1), (1,1,1)]
+    double3 xformOp:translate = (0,0,0)
+    double3 xformOp:translate.timeSamples = {
+        0:   (0,0,0),
+        50:  (0,-5,0),
+        100: (0, 5,0),
+        150: (0,-10,0),
+        200: (0, 10,0),
+    }
+
+    float3 xformOp:rotateXYZ = (0,180,0)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+}
+
+def Cube "parent0" {
+	float3[] extent = [(-1, -1, -1), (1,1,1)]
+    double3 xformOp:translate = (10,10,10)
+    float3 xformOp:scale = (2,2,2)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+
+	def Cube "child1" {
+		float3[] extent = [(-1, -1, -1), (1,1,1)]
+	    double3 xformOp:translate = (10,10,10)
+    	float3 xformOp:rotateXYZ = (0,0,0)
+	    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+
+		def Cube "child2" {
+			float3[] extent = [(-1, -1, -1), (1,1,1)]
+		    double3 xformOp:translate = (15,15,15)
+	    	float3 xformOp:rotateXYZ = (0,0,0)
+		    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+		}
+	}
+}
+
+def Camera "camera1" (
+    kind = "assembly"
+)
+{
+    float2 clippingRange = (10, 10000)
+    float focalLength = 60
+    float focusDistance = 5
+    float fStop = 5.6
+    float horizontalAperture = 35.999928
+    float horizontalApertureOffset = 0
+    token projection = "perspective"
+    float verticalAperture = 23.999952
+    float verticalApertureOffset = 0
+    float xformOp:rotateX = -90
+    double3 xformOp:translate = (0, 0, 200)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX"]
+}
